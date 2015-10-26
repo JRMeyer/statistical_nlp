@@ -67,21 +67,60 @@ class HMM:
             trellisCol+=1
         return Trellis
 
-    def print_best_states_from_trellis(self,Trellis):
+    def most_probable_states(self,Trellis):
         # delete the first entry from start states before printing
         print(np.delete(Trellis.argmax(axis=0),obj=0,axis=1))
 
-    
+        
+def cartesian_product(arrays, cartesianProdArray=None):
+    """
+    Generate a cartesian product of input arrays.
+
+    INPUT
+    arrays : list of array-like
+        1-D arrays to form the cartesian product of.
+    cartesianProdArray : ndarray
+        Array to place the cartesian product in.
+
+    OUTPUT
+    cartesianProdArray : ndarray
+        2-D array of shape (M, len(arrays)) containing cartesian products
+        formed of input arrays.
+
+    EXAMPLE
+    >>> cartesian(([1], [4, 5], [6, 7]))
+    array([[1, 4, 6],
+           [1, 4, 7],
+           [1, 5, 6],
+           [1, 5, 7]])
+    """
+    # take the input (array_like: lists, tuples, matrices) and convert to array
+    arrays = [np.asarray(x) for x in arrays]
+    # take the datatype from the first of the arrays
+    dtype = arrays[0].dtype
+
+    # find the length of the output array
+    n = np.prod([x.size for x in arrays])
+    # initialize empty array
+    if cartesianProdArray is None:
+        cartesianProdArray = np.zeros([n, len(arrays)], dtype=dtype)
+
+    m = n / arrays[0].size
+    cartesianProdArray[:,0] = np.repeat(arrays[0], m)
+    if arrays[1:]:
+        cartesian_product(arrays[1:],
+                          cartesianProdArray=cartesianProdArray[0:m,1:])
+        for j in range(1, arrays[0].size):
+            cartesianProdArray[j*m:(j+1)*m,1:] = cartesianProdArray[0:m,1:]
+    return cartesianProdArray
+
+
 if __name__ == "__main__":
     hmm = HMM()
-    _string = input("enter string: ")
-    Trellis = hmm.forward_algorithm(_string)
-    hmm.print_best_states_from_trellis(Trellis)
-
-    
-# how to generate things (from tutorial)
-# (1) choose initial state from PI
-# (2) set t = 1
-# (3) chose emission from initial state (B) 
-# (4) transition to new state (A)
-# (5) increment t and go to (3) 
+    allLen3sentences = cartesian_product([hmm.K]*3)
+    for sentence in allLen3sentences:
+        Trellis = hmm.forward_algorithm(sentence)
+        print(sentence)
+        hmm.most_probable_states(Trellis)
+        print(Trellis)
+        print('============')
