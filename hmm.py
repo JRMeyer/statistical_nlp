@@ -28,7 +28,7 @@ class HMM:
                            [0.1, 0.7, 0.2]],
                           dtype=float)
         # look-up tables for emissions and states
-        self.S = ['1','2','3']
+        self.S = ['tag1','tag2','tag3']
         self.K = ['a','b','c']
 
     
@@ -67,10 +67,13 @@ class HMM:
             trellisCol+=1
         return Trellis
 
-    def most_probable_states(self,Trellis):
-        # delete the first entry from start states before printing
-        print(np.delete(Trellis.argmax(axis=0),obj=0,axis=1))
-
+    def get_best_path(self,Trellis):
+        # delete the first column (start states) before printing
+        noStartTrellis = np.delete(Trellis,obj=0,axis=1)
+        stateIndeces = np.array(noStartTrellis.argmax(axis=0))[0]
+        mostProbStates = [self.S[i] for i in stateIndeces]
+        highestProbs = noStartTrellis.max(axis=0)
+        return mostProbStates, highestProbs
         
 def cartesian_product(arrays, cartesianProdArray=None):
     """
@@ -117,10 +120,19 @@ def cartesian_product(arrays, cartesianProdArray=None):
 
 if __name__ == "__main__":
     hmm = HMM()
-    allLen3sentences = cartesian_product([hmm.K]*3)
-    for sentence in allLen3sentences:
-        Trellis = hmm.forward_algorithm(sentence)
-        print(sentence)
-        hmm.most_probable_states(Trellis)
-        print(Trellis)
-        print('============')
+    len1sentences = cartesian_product([hmm.K]*1)
+    len2sentences = cartesian_product([hmm.K]*2)
+    len3sentences = cartesian_product([hmm.K]*3)
+    
+    for sentences in [len1sentences,len2sentences,len3sentences]:
+        for sentence in sentences:
+            Trellis = hmm.forward_algorithm(sentence)
+            states, probs = hmm.get_best_path(Trellis)
+            
+            tags = (' ').join(states)
+            sentence = ('').join(np.array(sentence))
+            jointProb = np.prod(probs)
+            tableLine = (sentence +'\t& '+ tags +'\t& '+ str(jointProb) +r'\\')
+            print(tableLine)
+
+        
