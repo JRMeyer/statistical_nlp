@@ -10,31 +10,36 @@ import random
 
 class HMM:
     def __init__(self):
-        # number of states in model
-        self.N = 3
-        # number of elements in emissions alphabet
-        self.M = 3
-        # array of initial state probabilities
-        self.PI = np.matrix([0.3, 0.5, 0.2],
-                      dtype=float)
-        # matrix of state transition probabilities
-        self.A = np.matrix([[0.2, 0.6, 0.2],
-                           [0.3, 0.3, 0.4],
-                           [0.1, 0.8, 0.1]],
-                          dtype=float)
-        # matrix of emission probabilities
-        self.B = np.matrix([[0.3, 0.1, 0.6],
-                           [0.5, 0.3, 0.2],
-                           [0.1, 0.7, 0.2]],
-                          dtype=float)
         # look-up tables for emissions and states
-        self.S = ['tag1','tag2','tag3']
-        self.K = ['a','b','c']
+        self.S = ['tag1','tag2','tag3', 'tag4', 'tag5']
+        self.K = ['w1','w2','w3', 'w4']
+        
+        # array of initial state probabilities
+        self.PI = np.matrix([0.15,
+                             0.25,
+                             0.20,
+                             0.25,
+                             0.15],
+                            dtype=float)
 
-    
-    def generate_string(self):
-        pass
-    
+        # matrix of state transition probabilities
+        self.A = np.matrix([[0.20, 0.20, 0.20, 0.20, 0.20],
+                            [0.10, 0.15, 0.50, 0.15, 0.10],
+                            [0.30, 0.10, 0.30, 0.10, 0.20],
+                            [0.40, 0.05, 0.10, 0.40, 0.05],
+                            [0.20, 0.30, 0.10, 0.10, 0.30]],
+                           dtype=float)
+
+
+        # matrix of emission probabilities
+        self.B = np.matrix([[0.25, 0.25, 0.25, 0.25],
+                            [0.30, 0.20, 0.30, 0.20],
+                            [0.30, 0.10, 0.30, 0.30],
+                            [0.10, 0.20, 0.30, 0.40],
+                            [0.20, 0.30, 0.20, 0.30]],
+                           dtype=float)
+
+        
     def forward_algorithm(self, O):
         '''
         Given some input string O, calculate the probability that
@@ -67,6 +72,11 @@ class HMM:
             trellisCol+=1
         return Trellis
 
+    def compute_max_likelihood(self, O):
+        Trellis = self.forward_algorithm(O)
+        MLE = np.sum(Trellis, axis=0)[0,-1]
+        print(O, str(MLE))
+        
     def get_best_path(self,Trellis):
         # delete the first column (start states) before printing
         noStartTrellis = np.delete(Trellis,obj=0,axis=1)
@@ -118,21 +128,29 @@ def cartesian_product(arrays, cartesianProdArray=None):
     return cartesianProdArray
 
 
-if __name__ == "__main__":
-    hmm = HMM()
+def generate_string(hmm):
     len1sentences = cartesian_product([hmm.K]*1)
     len2sentences = cartesian_product([hmm.K]*2)
     len3sentences = cartesian_product([hmm.K]*3)
-    
+
     for sentences in [len1sentences,len2sentences,len3sentences]:
         for sentence in sentences:
             Trellis = hmm.forward_algorithm(sentence)
             states, probs = hmm.get_best_path(Trellis)
-            
+
             tags = (' ').join(states)
             sentence = ('').join(np.array(sentence))
             jointProb = np.prod(probs)
-            tableLine = (sentence +'\t& '+ tags +'\t& '+ str(jointProb) +r'\\')
+            # latex booktabs format
+            tableLine = (sentence+'\t& '+tags+'\t& '+str(jointProb)+r'\\')
             print(tableLine)
 
-        
+
+            
+if __name__ == "__main__":
+    hmm = HMM()
+    with open(input('Enter filename here: ')) as f:
+        lines = f.readlines()
+    for line in lines:        
+        O = line.rstrip().split(' ')
+        hmm.compute_max_likelihood(O)

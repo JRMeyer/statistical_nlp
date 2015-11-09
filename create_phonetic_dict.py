@@ -1,4 +1,4 @@
-from tokenize_corpus import tokenize_file
+from tokenize_corpus import tokenize_line
 import re
 
 def save_pronunciation_dict(tokens, lookupTable):
@@ -8,29 +8,29 @@ def save_pronunciation_dict(tokens, lookupTable):
         phonemes=token
 
         # palatal/uvular plosives followed by front/back vowels
-        phonemes = re.sub(r'к([аоуы])', r'K \1', phonemes)
-        phonemes = re.sub(r'к([иеэөү])', r'K \1', phonemes)
-        phonemes = re.sub(r'г([аоуы])', r'G \1', phonemes)
-        phonemes = re.sub(r'г([иеэөү])', r'G \1', phonemes)
+        phonemes = re.sub(r'к([аоуы])', r'kh \1', phonemes)
+        phonemes = re.sub(r'к([иеэөү])', r'k \1', phonemes)
+        phonemes = re.sub(r'г([аоуы])', r'gh \1', phonemes)
+        phonemes = re.sub(r'г([иеэөү])', r'g \1', phonemes)
 
         # syllable final palatal/velar plosives preceded by front/back vowels
-        phonemes = re.sub(r'([аоуы])к([^аоуыиеэөү])', r'\1K \2', phonemes)
-        phonemes = re.sub(r'([иеэөү])к([^аоуыиеэөү])', r'\1K \2', phonemes)
-        phonemes = re.sub(r'([аоуы])г([^аоуыиеэөү])', r'\1G \2', phonemes)
-        phonemes = re.sub(r'([иеэөү])г([^аоуыиеэөү])', r'\1G \2', phonemes)
+        phonemes = re.sub(r'([аоуы])к([^аоуыиеэөү])', r'\1kh \2', phonemes)
+        phonemes = re.sub(r'([иеэөү])к([^аоуыиеэөү])', r'\1k \2', phonemes)
+        phonemes = re.sub(r'([аоуы])г([^аоуыиеэөү])', r'\1gh \2', phonemes)
+        phonemes = re.sub(r'([иеэөү])г([^аоуыиеэөү])', r'\1g \2', phonemes)
 
         # word final palatal/velar plosives preceded by front/back vowels
-        phonemes = re.sub(r'([аоуы])к($)', r'\1K', phonemes)
-        phonemes = re.sub(r'([иеэөү])к($)', r'\1K', phonemes)
-        phonemes = re.sub(r'([аоуы])г($)', r'\1G', phonemes)
-        phonemes = re.sub(r'([иеэөү])г($)', r'\1G', phonemes)
+        phonemes = re.sub(r'([аоуы])к($)', r'\1kh', phonemes)
+        phonemes = re.sub(r'([иеэөү])к($)', r'\1k', phonemes)
+        phonemes = re.sub(r'([аоуы])г($)', r'\1gh', phonemes)
+        phonemes = re.sub(r'([иеэөү])г($)', r'\1g', phonemes)
 
         # /b/ between back vowels goes to [w] 
-        phonemes = re.sub(r'([аоуы])б([аоуы])', r'\1W \2', phonemes)
+        phonemes = re.sub(r'([аоуы])б([аоуы])', r'\1b \2', phonemes)
 
         # diphthongs
-        phonemes = re.sub(r'ой', r'OY ', phonemes)
-        phonemes = re.sub(r'ай', r'AY ', phonemes)
+        phonemes = re.sub(r'ой', r'o i ', phonemes)
+        phonemes = re.sub(r'ай', r'a i ', phonemes)
 
         for character in phonemes:
             if character in lookupTable:
@@ -43,53 +43,62 @@ def save_pronunciation_dict(tokens, lookupTable):
 
 
 # based on Arpabet https://en.wikipedia.org/wiki/Arpabet
-lookupTable = {'а':'AA ',
-               'о':'OW ',
-               'у':'UW ',
-               'ы':'IH ',
+lookupTable = {'а':'a ',
+               'о':'o ',
+               'у':'u ',
+               'ы':'y ',
             
-               'и':'IY ',
-               'е':'EH ',
-               'э':'EH ',
-               'ө':'AH ',
-               'ү':'UW ',
+               'и':'i ',
+               'е':'e ',
+               'э':'e ',
+               'ө':'o ',
+               'ү':'u ',
                
-               'ю':'Y UH ',
-               'я':'Y AA ',
-               'ё':'Y OW ',
+               'ю':'u ',
+               'я':'a ',
+               'ё':'o ',
                
-               'п':'P ',
-               'б':'B ',
+               'п':'p ',
+               'б':'b ',
                
-               'д':'D ',
-               'т':'T ',
+               'д':'d ',
+               'т':'t ',
 
-               'к':'K ',
-               'г':'G ',
+               'к':'k ',
+               'г':'g ',
                
-               'ш':'SH ',
-               'щ':'SH ',
-               'ж':'JH ',
+               'ш':'sh ',
+               'щ':'sch ',
+               'ж':'zh ',
             
-               'й':'Y ',
-               'л':'L ',
-               'м':'M ',
-               'н':'N ',
-               'ң':'NG ',
+               'й':'j ',
+               'л':'l ',
+               'м':'m ',
+               'н':'n ',
+               'ң':'ng ',
                
-               'з':'Z ',
-               'с':'S ',
-               'ц':'T S ',
-               'ч':'CH ',
-               'ф':'F ',
-               'в':'V ',
-               'х':'HH ',
-               'р':'R ',
+               'з':'z ',
+               'с':'s ',
+               'ц':'c ',
+               'ч':'ch ',
+               'ф':'f ',
+               'в':'v ',
+               'х':'h ',
+               'р':'r ',
                'ъ':' ',
                'ь':' '}
         
         
 if __name__ == "__main__":
     fileName = input("enter file path here: ")
-    tokens = tokenize_file(fileName)
+    f = open(fileName)
+
+    # regex pattern to match everything that isn't a letter
+    pattern = re.compile('[\W_0-9]+', re.UNICODE)
+    
+    tokens=[]
+    for line in f:
+        for token in tokenize_line(line, n=1, tags=False):
+            token = pattern.sub('', token)
+            tokens.append(token)
     save_pronunciation_dict(tokens, lookupTable)

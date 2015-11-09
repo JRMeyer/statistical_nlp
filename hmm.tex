@@ -1,0 +1,93 @@
+% previous ASL priming studies?
+% stats?
+%
+
+\documentclass[]{article}
+\usepackage{tikz}
+\usepackage{tikz,fullpage}
+\usetikzlibrary{arrows,%
+                petri,%
+                topaths}%
+\usepackage{tkz-berge}
+\usepackage[position=top]{subfig}
+\begin{document}
+
+
+\begin{figure}
+\begin{tikzpicture}
+  \GraphInit[vstyle=Welsh]
+  \SetGraphUnit{4}
+  
+  \Vertices{circle}{A,B,C,D,E}
+  
+  \SetUpEdge[style={->}]
+
+  \tikzset{EdgeStyle/.append style = {bend left}}
+
+  \Loop[dist=1.5cm,dir=WE,label=\(x\)](A)
+  \Edges[label=$0.20$](A,B)
+  \Edges[label=$0.20$](A,C)
+  \Edges[label=$0.20$](A,D)
+  \Edges[label=$0.20$](A,E)
+
+  \Loop[dist=1.5cm,dir=WE,label=\(x\)](B)
+  \Edges[label=$0.10$](B,A)
+  \Edges[label=$0.50$](B,C)
+  \Edges[label=$0.15$](B,D)
+  \Edges[label=$0.10$](B,E)
+
+  \Loop[dist=1.5cm,dir=WE,label=\(x\)](C)
+  \Edges[label=$0.30$](C,A)
+  \Edges[label=$0.10$](C,B)
+  \Edges[label=$0.10$](C,D)
+  \Edges[label=$0.20$](C,E)
+
+  \Loop[dist=1.5cm,dir=WE,label=\(x\)](D)
+  \Edges[label=$0.40$](D,A)
+  \Edges[label=$0.05$](D,B)
+  \Edges[label=$0.10$](D,C)
+  \Edges[label=$0.05$](D,E)
+
+  \Loop[dist=1.5cm,dir=WE,label=\(x\)](E)
+  \Edges[label=$0.20$](E,A)
+  \Edges[label=$0.30$](E,B)
+  \Edges[label=$0.10$](E,C)
+  \Edges[label=$0.10$](E,D)
+
+  \SetVertexNoLabel
+\end{tikzpicture}
+\end{figure}
+
+
+\end{document}
+
+
+        %% # array of initial state probabilities
+        %% self.PI = np.matrix([0.15,
+        %%                      0.25,
+        %%                      0.20,
+        %%                      0.25,
+        %%                      0.15],
+        %%                     dtype=float)
+
+
+
+        %% # matrix of emission probabilities
+        %% self.B = np.matrix([[0.25, 0.25, 0.25, 0.25],
+        %%                     [0.30, 0.20, 0.30, 0.20],
+        %%                     [0.30, 0.10, 0.30, 0.30],
+        %%                     [0.10, 0.20, 0.30, 0.40],
+        %%                     [0.20, 0.30, 0.20, 0.30]],
+        %%                    dtype=float)
+
+
+
+
+                                % A     B      C     D     E
+        %%                   A [[0.20, 0.20, 0.20, 0.20, 0.20],
+        %%                   B  [0.10, 0.15, 0.50, 0.15, 0.10],
+        %%                   C  [0.30, 0.10, 0.30, 0.10, 0.20],
+        %%                   D  [0.40, 0.05, 0.10, 0.40, 0.05],
+        %%                   E  [0.20, 0.30, 0.10, 0.10, 0.30]],
+
+  
