@@ -1,6 +1,6 @@
 import nltk
 from nltk import corpus
-from nltk.tag import DefaultTagger, RegexpTagger, NgramTagger
+from nltk.tag import DefaultTagger, RegexpTagger, NgramTagger, hmm
 
 
 def get_train_test_sets(percentTrain):
@@ -14,10 +14,11 @@ def get_train_test_sets(percentTrain):
 
 
 def train_taggers(trainSents):
+    hmm_tagger = hmm.HiddenMarkovModelTagger.train(trainSents)
     default_tagger = DefaultTagger('NN')
-    unigram_tagger = NgramTagger(n=1,train=list(corpus.treebank.tagged_sents()))
-    bigram_tagger = NgramTagger(n=2,train=list(corpus.treebank.tagged_sents()))
-    trigram_tagger = NgramTagger(n=3,train=list(corpus.treebank.tagged_sents()))
+    unigram_tagger = NgramTagger(n=1,train=trainSents)
+    bigram_tagger = NgramTagger(n=2,train=trainSents)
+    trigram_tagger = NgramTagger(n=3,train=trainSents)
     regexp_tagger = RegexpTagger(
         [(r'^-?[0-9]+(.[0-9]+)?$', 'CD'),   # cardinal numbers
          (r'(The|the|A|a|An|an)$', 'AT'),   # articles
@@ -31,7 +32,7 @@ def train_taggers(trainSents):
         ])
 
     Taggers = [default_tagger,unigram_tagger,bigram_tagger,
-               trigram_tagger, regexp_tagger]
+               trigram_tagger, regexp_tagger, hmm_tagger]
     return Taggers
 
 
