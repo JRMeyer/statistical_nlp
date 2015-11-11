@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2015.10.27)  9 NOV 2015 13:00
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2015.10.27)  9 NOV 2015 16:52
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -507,27 +507,27 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: subfig package v1.3 is loaded.
 Package caption Info: End \AtBeginDocument code.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 27.
+(Font)              <7> on input line 29.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 27.
+(Font)              <5> on input line 29.
 
-Overfull \hbox (26.14833pt too wide) in paragraph at lines 58--59
+Overfull \hbox (26.14833pt too wide) in paragraph at lines 68--69
 [][] 
  []
 
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./hmm.aux) ) 
 Here is how much of TeX's memory you used:
- 14243 strings out of 493085
- 285354 string characters out of 6136916
- 337952 words of memory out of 5000000
- 17486 multiletter control sequences out of 15000+600000
+ 14275 strings out of 493085
+ 285990 string characters out of 6136916
+ 339952 words of memory out of 5000000
+ 17518 multiletter control sequences out of 15000+600000
  3640 words of font info for 14 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 61i,10n,96p,410b,1138s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 61i,10n,96p,410b,1139s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share
 /texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texli
 ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on hmm.pdf (1 page, 22019 bytes).
+Output written on hmm.pdf (1 page, 23737 bytes).
 PDF statistics:
  19 PDF objects out of 1000 (max. 8388607)
  13 compressed objects within 1 object stream

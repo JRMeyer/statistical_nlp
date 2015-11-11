@@ -20,10 +20,19 @@
   
   \Vertices{circle}{A,B,C,D,E}
   
+  \Vertex[x=4,y=-12]{START}
+  
   \SetUpEdge[style={->}]
 
   \tikzset{EdgeStyle/.append style = {bend left}}
 
+  \Edges[label=$0.15$](START,A)
+  \Edges[label=$0.25$](START,B)
+  \Edges[label=$0.20$](START,C)
+  \Edges[label=$0.25$](START,D)
+  \Edges[label=$0.15$](START,E)
+
+  
   \Loop[dist=1.5cm,dir=WE,label=\(x\)](A)
   \Edges[label=$0.20$](A,B)
   \Edges[label=$0.20$](A,C)
@@ -55,6 +64,7 @@
   \Edges[label=$0.10$](E,D)
 
   \SetVertexNoLabel
+
 \end{tikzpicture}
 \end{figure}
 
