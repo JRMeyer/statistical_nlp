@@ -147,8 +147,7 @@ if __name__ == '__main__':
     
     tokens=[]
     for line in f:
-        tokens.append(line.split(' ')[0])
-        # for token in tokenize_line(line, n=1, tags=False):
-        #     token = pattern.sub('', token)
-        #     tokens.append(token)
-    save_pronunciation_dict(tokens, lookupTable=kyrgyz_table, lang='kyrgyz')
+        for token in tokenize_line(line, n=1, tags=False):
+            token = pattern.sub('', token)
+            tokens.append(token)
+    save_pronunciation_dict(tokens, lookupTable=kazakh_table, lang='kazakh')
