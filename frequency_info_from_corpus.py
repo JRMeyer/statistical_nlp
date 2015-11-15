@@ -23,10 +23,14 @@ words = []
 for line in f:
     line = line.rstrip().lower()
     for word in line.split(' '):
-        words.append(word)
+        if word == '':
+            pass
+        else:
+            words.append(word)
 
 # create file object for output
-outfile = open('output.txt', 'w')
+outFile = open('output.txt', 'w')
 
+outFile.write('A total of '+ str(len(words)) +' tokens were in the text\n')
 for item in Counter(words).most_common():
-    outfile.write(item[0] +', ' +str(item[1]) + '\n')
+    outFile.write(item[0] +', ' +str(item[1]) + '\n')
