@@ -1,8 +1,6 @@
 '''
 Joshua Meyer
 
-
-
 INPUT: list of (word,POS) tuples
 
 OUTPUT: list of words and entropies in descending order

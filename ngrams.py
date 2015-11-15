@@ -2,8 +2,10 @@
 Joshua Meyer
 
 Given a corpus (text file), output a model of n-grams
+
 USAGE: $ python3 ngrams.py
 '''
+
 from tokenize_corpus import *
 import operator
 from collections import Counter
@@ -15,7 +17,6 @@ import re
 
 def get_user_input():
     fileName = input("Enter filepath here: ")
-    fTest = input("Enter test filepath here: ")
     smoothing = input("Pick your flavor of smoothing...\n"+
                       "Enter 'laplace' or 'lidstone' or 'none' here: ")
     if smoothing == 'lidstone':
@@ -23,12 +24,66 @@ def get_user_input():
                       "Enter a decimal here: "))
     else:
         _lambda = None
-    return fileName, fTest, smoothing, _lambda
+    return fileName, smoothing, _lambda
+
+
+def tokenize_line(line):
+    '''
+    (1) lower all text, strip whitespace and newlines
+    (2) replace everything that isn't a letter or space
+    (3) split line on whitespace
+    (4) pad the line
+    (5) return tokens
+    '''
+    line = line.lower().strip().rstrip()
+    # regex pattern to match everything that isn't a letter
+    pattern = re.compile('[\W_0-9]+', re.UNICODE)
+    # replace everything that isn't a letter or space
+    line = (' ').join([pattern.sub('', token) for token in line.split(' ')])
+    tokens=[]
+    for token in line.split(' '):
+        if token == '':
+            pass
+        else:
+            tokens.append(token)   
+    # pad the line
+    tokens = ['<s>'] + tokens + ['</s>']      
+    return tokens
+
+
+def get_lists_of_tokens_from_file(fileName,kyrgyzLetters):
+    with open(fileName) as inFile:
+        content = inFile.read()
+        
+        unigrams=[]
+        bigrams=[]
+        numSentences=0
+        for line in content.split('.'):
+            tokens=[]
+            line = tokenize_line(line)
+            if line == ['<s>','</s>']:
+                pass
+            else:
+                for token in line:
+                    if (all(char in kyrgyzLetters for char in token)):
+                        tokens.append(token)
+                    elif token == '<s>' or token == '</s>':
+                        tokens.append(token)
+                    else:
+                        pass
+                
+            for unigram in get_ngrams(tokens,1):
+                unigrams.append(unigram)
+                
+            for bigram in get_ngrams(tokens,2):
+                bigrams.append(bigram)
+            numSentences+=1
+    return unigrams, bigrams, numSentences
 
 
 def get_ngrams(tokens, n):
     '''
-    Given an optionally padded list of tokens, return list of ngrams
+    Given a list of tokens, return a list of tuple ngrams
     '''
     ngrams=[]
     # special case for unigrams
@@ -46,7 +101,6 @@ def get_ngrams(tokens, n):
 def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda):
     '''
     Make a dictionary of probabilities, where the key is the ngram.
-
     Without smoothing, we have: p(X) = freq(X)/NUMBER_OF_NGRAMS
     '''
     if smoothing == 'none':
@@ -87,12 +141,14 @@ def get_ngram_model(probDict):
     loggedProbs={}
     for nGram, nGramProb in probDict.items():
         if len(nGram) == 1:
-            loggedProbs[nGram] = np.log(nGramProb)
+            loggedProbs[nGram] = np.log10(nGramProb)
         else:
             nMinus1Gram = nGram[:(len(nGram)-1)]
             nMinus1GramProb = probDict[nMinus1Gram]
-            condNgramProb = nGramProb/nMinus1GramProb
-            loggedProbs[nGram] = np.log(condNgramProb)
+            
+            condNgramProb = np.log(nGramProb) - np.log10(nMinus1GramProb)
+            loggedProbs[nGram] = condNgramProb
+
     return loggedProbs
 
 
@@ -109,39 +165,60 @@ def print_joint_prob(fileName, probDict, probUnSeen):
             try:
                 probs.append(probDict[bigram])
             except:
-                probs.append(np.log(probUnSeen))
+                probs.append(np.log10(probUnSeen))
         print(np.prod(probs))
 
         
-if __name__ == "__main__":
-    fileName,fTest,smoothing,_lambda = get_user_input()
+kyrgyzLetters = ['а','о','у','ы','и','е','э',
+                'ө','ү','ю','я','ё','п','б',
+                'д','т','к','г','х','ш','щ',
+                'ж','з','с','ц','ч','й','л',
+                'м','н','ң','ф','в','р','ъ',
+                'ь']
 
-    unigrams=[]
-    bigrams=[]
-    f = open(fileName)
-    numSentences=0
-    for line in f:
-        tokens = tokenize_line(line,1,tags=True)
-        for unigram in get_ngrams(tokens,1):
-            unigrams.append(unigram)
-
-        tokens = tokenize_line(line,2,tags=True)
-        for bigram in get_ngrams(tokens,2):
-            bigrams.append(bigram)
-        numSentences+=1
-
-    # we need these to calulate our conditional probabilities later on
-    unigrams = unigrams + [('#',)]*numSentences 
         
+if __name__ == "__main__":
+    fileName,smoothing,_lambda = get_user_input()
+
+    unigrams,bigrams,numSentences = get_lists_of_tokens_from_file(fileName,
+                                                                  kyrgyzLetters)
+
     uniProbDict, uniProbUnSeen = get_prob_dict(unigrams,1,smoothing,_lambda)
     biProbDict, biProbUnSeen = get_prob_dict(bigrams,2,smoothing,_lambda)
 
+    # we need this nGramProbDict to get conditional probabilities
+    ### This should be re-written without this intermediate step!
     nGramProbDict = {}
     for d in [uniProbDict,biProbDict]:
         for key,value in d.items():
             nGramProbDict[key] = value
 
     condProbDict = get_ngram_model(nGramProbDict)
+    biCondDict={}
+    for key,value in condProbDict.items():
+        if len(key)==2:
+            biCondDict[key]=value
+                
+    with open('output.txt', 'w', encoding = 'utf-8') as outFile:
+        
+        outFile.write('\n\data\\\n')
+        outFile.write('ngram 1=' + str(len(uniProbDict)) +'\n')
+        outFile.write('ngram 2=' + str(len(biCondDict)) +'\n\n')
 
-    print_joint_prob(fTest,condProbDict,biProbUnSeen)
-    
+        ## unigrams
+        outFile.write('\\1-grams:\n')
+        sortedUni = sorted(uniProbDict.items(), key=operator.itemgetter(1),
+                           reverse=True)
+        for key,value in sortedUni:
+            entry = (str(np.log10(value)) +' '+ key[0])
+            outFile.write(entry+'\n')
+
+        ## bigrams
+        outFile.write('\n\\2-grams:\n')
+        sortedBi = sorted(biCondDict.items(), key=operator.itemgetter(1),
+                           reverse=True)
+        for key,value in sortedBi:
+            entry = (str(value) +' '+ key[0] +' '+ key[1])
+            outFile.write(entry+'\n')
+
+        outFile.write('\n\end\\')
