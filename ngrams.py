@@ -23,7 +23,8 @@ def get_user_input():
                       "Enter a decimal here: "))
     else:
         _lambda = None
-    return fileName, smoothing, _lambda
+    backoff = input("Generate a Backoff model?\nEnter 'true' or 'false': ")
+    return fileName, smoothing, _lambda, backoff
 
 
 def tokenize_line(line):
@@ -185,6 +186,7 @@ def get_conditional_model(uniProbDict,biProbDict):
 
 
 def get_bow_dict(uniProbDict,biProbDict):
+    # calculate backoff weights as in Katz 1987
     bowDict={}
     for uniKey,uniValue in uniProbDict.items():
         numerator=0
@@ -208,7 +210,7 @@ kyrgyzLetters = ['а','о','у','ы','и','е','э',
         
 if __name__ == "__main__":
     # get user input
-    fileName,smoothing,_lambda = get_user_input()
+    fileName,smoothing,_lambda,backoff = get_user_input()
 
     # get lists of tuples of ngrams
     unigrams,bigrams,numSentences = get_ngrams_from_file(fileName,kyrgyzLetters)
@@ -218,8 +220,10 @@ if __name__ == "__main__":
     biProbDict, biProbUnSeen = get_prob_dict(bigrams,2,smoothing,_lambda)
 
     # get back-off weight dictionary
-    bowDict = get_bow_dict(uniProbDict,biProbDict)
-    
+    if backoff == 'true':
+        bowDict = get_bow_dict(uniProbDict,biProbDict)
+    else:
+        pass
     
     with open('output.txt', 'w', encoding = 'utf-8') as outFile:
         
