@@ -6,6 +6,7 @@ Given a corpus (text file), output a model of n-grams
 USAGE: $ python3 ngrams.py
 '''
 
+import argparse
 import operator
 from collections import Counter
 import numpy as np
@@ -13,21 +14,36 @@ import re
 
 
 
+def parse_user_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i','--infile', type=str, help='the input text file')
+    parser.add_argument('-s','--smoothing',type=str, help='flavor of smoothing',
+                        choices = ['none','laplace','lidstone','turing'],
+                        default='none')
+    parser.add_argument('-w','--weight', type=int, help='Lidstones lambda',
+                        default=None)
+    parser.add_argument('-bo','--backoff', action='store_true',
+                        help='add backoff weights')
+    parser.add_argument('-k','--cutoff', type=int, default=1,
+                        help='frequency count cutoff')
+    args = parser.parse_args()
+    return args
 
-def get_user_input():
-    fileName = input("Enter filepath here: ")
-    smoothing = input("Pick your flavor of smoothing...\n"+
-                      "Enter 'laplace' or 'lidstone', 'turing', or 'none': ")
-    if smoothing == 'lidstone':
-        _lambda = float(input("Choose your value for Lidstone's Lambda\n"+
-                      "Enter a decimal here: "))
-    else:
-        _lambda = None
-    backoff = input("Generate a Backoff model?\nEnter 'true' or 'false': ")
-    return fileName, smoothing, _lambda, backoff
+
+def get_lines_from_file(fileName,kyrgyzLetters):
+    with open(fileName) as inFile:
+        lines=[]
+        content = inFile.read()
+        for line in content.split('.'):
+            line = tokenize_line(line,kyrgyzLetters)
+            if line == ['<s>','</s>']:
+                pass
+            else:
+                lines.append(line)
+    return lines
 
 
-def tokenize_line(line):
+def tokenize_line(line,kyrgyzLetters):
     '''
     (1) lower all text, strip whitespace and newlines
     (2) replace everything that isn't a letter or space
@@ -44,14 +60,34 @@ def tokenize_line(line):
     for token in line.split(' '):
         if token == '':
             pass
-        else:
-            tokens.append(token)   
+        # make sure we only have Kyrgyz letters in token
+        elif (all(char in kyrgyzLetters for char in token)):
+            tokens.append(token)
     # pad the line
     tokens = ['<s>'] + tokens + ['</s>']      
     return tokens
 
 
-def get_ngrams(tokens, n):
+def get_cutOff_words(tokens,k):
+    uniFreqDict = Counter(tokens)
+    cutOffWords=[]
+    for key,value in uniFreqDict.items():
+        if value <= k:
+            cutOffWords.append(key)
+    return cutOffWords
+
+
+def replace_cutoff_with_UNK(lines, cutOffWords):
+    for line in lines:
+        for i,token in enumerate(line):
+            if token in cutOffWords:
+                line[i]='<UNK>'
+            else:
+               pass
+    return lines
+
+
+def get_ngrams_from_line(tokens, n):
     '''
     Given a list of tokens, return a list of tuple ngrams
     '''
@@ -66,36 +102,6 @@ def get_ngrams(tokens, n):
         for i in range(len(tokens)-(n-1)):
             ngrams.append(tuple(tokens[i:i+n]))
     return ngrams
-
-
-def get_ngrams_from_file(fileName,kyrgyzLetters):
-    with open(fileName) as inFile:
-        content = inFile.read()
-        
-        unigrams=[]
-        bigrams=[]
-        numSentences=0
-        for line in content.split('.'):
-            tokens=[]
-            line = tokenize_line(line)
-            if line == ['<s>','</s>']:
-                pass
-            else:
-                for token in line:
-                    if (all(char in kyrgyzLetters for char in token)):
-                        tokens.append(token)
-                    elif token == '<s>' or token == '</s>':
-                        tokens.append(token)
-                    else:
-                        pass
-                
-            for unigram in get_ngrams(tokens,1):
-                unigrams.append(unigram)
-                
-            for bigram in get_ngrams(tokens,2):
-                bigrams.append(bigram)
-            numSentences+=1
-    return unigrams, bigrams, numSentences
 
 
 def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda):
@@ -207,20 +213,36 @@ kyrgyzLetters = ['а','о','у','ы','и','е','э',
                 'м','н','ң','ф','в','р','ъ',
                 'ь']
 
-        
+
 if __name__ == "__main__":
     # get user input
-    fileName,smoothing,_lambda,backoff = get_user_input()
+    args = parse_user_args()
+    fileName = args.infile
+    smoothing = args.smoothing
+    _lambda = args.weight
+    backoff = args.backoff
+    k = args.cutoff
 
-    # get lists of tuples of ngrams
-    unigrams,bigrams,numSentences = get_ngrams_from_file(fileName,kyrgyzLetters)
+    lines = get_lines_from_file(fileName,kyrgyzLetters)
+    tokens = [token for line in lines for token in line]
     
+    # make the cutOff
+    cutOffWords = get_cutOff_words(tokens,k)
+    lines = replace_cutoff_with_UNK(lines, cutOffWords)
+
+    # # get lists of tuples of ngrams
+    unigrams=[]
+    bigrams=[]
+    for line in lines:
+        unigrams+=get_ngrams_from_line(line,1)
+        bigrams+=get_ngrams_from_line(line,2) 
+
     # get probability dictionaries
     uniProbDict, uniProbUnSeen = get_prob_dict(unigrams,1,smoothing,_lambda)
     biProbDict, biProbUnSeen = get_prob_dict(bigrams,2,smoothing,_lambda)
 
     # get back-off weight dictionary
-    if backoff == 'true':
+    if backoff:
         bowDict = get_bow_dict(uniProbDict,biProbDict)
     else:
         pass
@@ -237,8 +259,11 @@ if __name__ == "__main__":
                           reverse=True)
         
         for key,value in sortedUni:
-            entry = (str(np.log(value)) +' '+ key[0] +' '+
-                     str(np.log(bowDict[key])))
+            if backoff:
+                entry = (str(np.log(value)) +' '+ key[0] +' '+
+                         str(np.log(bowDict[key])))
+            else:
+                entry = (str(np.log(value)) +' '+ key[0])
             outFile.write(entry+'\n')
 
         ## print bigrams
