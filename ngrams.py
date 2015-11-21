@@ -11,7 +11,7 @@ import operator
 from collections import Counter
 import numpy as np
 import re
-
+import time
 
 
 def parse_user_args():
@@ -30,16 +30,16 @@ def parse_user_args():
     return args
 
 
-def get_lines_from_file(fileName,kyrgyzLetters):
+def get_lines_from_file(fileName,kyrgyzLetters,startTime):
     with open(fileName) as inFile:
         lines=[]
         content = inFile.read()
         for line in content.split('.'):
             line = tokenize_line(line,kyrgyzLetters)
-            if line == ['<s>','</s>']:
-                pass
-            else:
-                lines.append(line)
+            lines.append(line)
+    inFile.close()
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' File read and tokenized')
     return lines
 
 
@@ -61,29 +61,37 @@ def tokenize_line(line,kyrgyzLetters):
         if token == '':
             pass
         # make sure we only have Kyrgyz letters in token
-        elif (all(char in kyrgyzLetters for char in token)):
+        elif all(char in kyrgyzLetters for char in token):
             tokens.append(token)
-    # pad the line
-    tokens = ['<s>'] + tokens + ['</s>']      
+    # check if there are tokens, then pad the line
+    if tokens:
+        tokens = ['<s>'] + tokens + ['</s>']      
     return tokens
 
 
-def get_cutOff_words(tokens,k):
+def get_cutOff_words(tokens,k,startTime):
     uniFreqDict = Counter(tokens)
     cutOffWords=[]
     for key,value in uniFreqDict.items():
         if value <= k:
             cutOffWords.append(key)
+            
+    numCutOffWords = len(cutOffWords)
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' A total of '+ str(numCutOffWords) + ' words occurring less than '+
+          str(k)+ ' time(s) excluded')
     return cutOffWords
 
 
-def replace_cutoff_with_UNK(lines, cutOffWords):
+def replace_cutoff_with_UNK(lines, cutOffWords, startTime):
     for line in lines:
         for i,token in enumerate(line):
             if token in cutOffWords:
                 line[i]='<UNK>'
             else:
                pass
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' Cutoff Words replaced with <UNK> ')
     return lines
 
 
@@ -131,6 +139,8 @@ def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda):
         # n_r = number of n-grams which occured r times
         # P_T = r*/N, the probability of an n-gram which occured r times
         # r* = (r+1) * ( (n_{r+1}) / (n_r) )
+
+        N = len(unigrams)
         
         freqDist_ngrams={}
         for key,value in Counter(ngrams).items():
@@ -141,10 +151,6 @@ def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda):
         for key,value in Counter(freqDist_ngrams.values()).items():
             # key = r, value = n_r
             freqDist_freqs[key] = value
-            
-        N = len(ngrams)
-        N_1 = freqDist_freqs[1]
-        probUnSeen = N_1/N
         
         probDict={}
         for key,value in freqDist_ngrams.items():
@@ -158,6 +164,9 @@ def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda):
                 n_r_plus_1 = n_r
             r_star = (r+1)*((n_r_plus_1)/(n_r))
             probDict[key] = r_star/N
+
+        # need to figure out this one as N/N_1...
+        probUnSeen=.0001
         
     else:
         probDict={}
@@ -215,6 +224,9 @@ kyrgyzLetters = ['а','о','у','ы','и','е','э',
 
 
 if __name__ == "__main__":
+    startTime = time.time()
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+ ' running')
+
     # get user input
     args = parse_user_args()
     fileName = args.infile
@@ -223,31 +235,43 @@ if __name__ == "__main__":
     backoff = args.backoff
     k = args.cutoff
 
-    lines = get_lines_from_file(fileName,kyrgyzLetters)
+    lines = get_lines_from_file(fileName,kyrgyzLetters,startTime)
     tokens = [token for line in lines for token in line]
     
     # make the cutOff
-    cutOffWords = get_cutOff_words(tokens,k)
-    lines = replace_cutoff_with_UNK(lines, cutOffWords)
+    cutOffWords = get_cutOff_words(tokens,k,startTime)
+    lines = replace_cutoff_with_UNK(lines, cutOffWords,startTime)
 
     # # get lists of tuples of ngrams
     unigrams=[]
     bigrams=[]
     for line in lines:
         unigrams+=get_ngrams_from_line(line,1)
-        bigrams+=get_ngrams_from_line(line,2) 
+        bigrams+=get_ngrams_from_line(line,2)
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' A total of ' +str(len(unigrams))+
+          ' unigrams found')
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+ ' A total of '+
+          str(len(bigrams)) + ' bigrams found')
 
     # get probability dictionaries
     uniProbDict, uniProbUnSeen = get_prob_dict(unigrams,1,smoothing,_lambda)
     biProbDict, biProbUnSeen = get_prob_dict(bigrams,2,smoothing,_lambda)
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' probability dictionaries made')
 
     # get back-off weight dictionary
     if backoff:
         bowDict = get_bow_dict(uniProbDict,biProbDict)
+        backedOff = 'true'
     else:
-        pass
+        bowDict = None
+        backedOff = 'false'
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' done with backoff')
     
-    with open('output.txt', 'w', encoding = 'utf-8') as outFile:
+    with open('language_model_' + smoothing +'_backoff-'+ backedOff +'.txt',
+              'w', encoding = 'utf-8') as outFile:
         
         outFile.write('\n\data\\\n')
         outFile.write('ngram 1=' + str(len(uniProbDict)) +'\n')
@@ -276,3 +300,6 @@ if __name__ == "__main__":
             outFile.write(entry+'\n')
 
         outFile.write('\n\end\\')
+
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' successfully printed model to file!')
