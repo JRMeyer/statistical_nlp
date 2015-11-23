@@ -32,11 +32,11 @@ def parse_user_args():
 
 def get_lines_from_file(fileName,kyrgyzLetters,startTime):
     with open(fileName) as inFile:
-        lines=[]
+        lines=''
         content = inFile.read()
         for line in content.split('.'):
             line = tokenize_line(line,kyrgyzLetters)
-            lines.append(line)
+            lines+=line
     inFile.close()
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
           ' File read and tokenized')
@@ -65,8 +65,11 @@ def tokenize_line(line,kyrgyzLetters):
             tokens.append(token)
     # check if there are tokens, then pad the line
     if tokens:
-        tokens = ['<s>'] + tokens + ['</s>']      
-    return tokens
+        line = (' ').join(tokens)
+        line = '<s> ' + line + ' </s>\n'
+    else:
+        line = ''
+    return line
 
 
 def get_cutOff_words(tokens,k,startTime):
@@ -79,20 +82,35 @@ def get_cutOff_words(tokens,k,startTime):
     numCutOffWords = len(cutOffWords)
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
           ' A total of '+ str(numCutOffWords) + ' words occurring less than '+
-          str(k)+ ' time(s) excluded')
+          str(k)+ ' time(s) identified')
     return cutOffWords
 
 
 def replace_cutoff_with_UNK(lines, cutOffWords, startTime):
-    for line in lines:
-        for i,token in enumerate(line):
-            if token in cutOffWords:
-                line[i]='<UNK>'
-            else:
-               pass
+    cutOffDict={}
+    for key in cutOffWords:
+        cutOffDict[' '+key+' ']=' <UNK> '
+    
+    for key,value in cutOffDict.items():
+        lines = re.sub(key,value,lines)
+            
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
           ' Cutoff Words replaced with <UNK> ')
     return lines
+
+def get_ngram_tuples(lines,startTime):
+    unigrams=[]
+    bigrams=[]
+    for line in lines.split('\n'):
+        line = line.split(' ')
+        unigrams+=get_ngrams_from_line(line,1)
+        bigrams+=get_ngrams_from_line(line,2)
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' A total of ' +str(len(unigrams))+
+          ' unigrams found')
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+ ' A total of '+
+          str(len(bigrams)) + ' bigrams found')
+    return unigrams, bigrams
 
 
 def get_ngrams_from_line(tokens, n):
@@ -236,40 +254,36 @@ if __name__ == "__main__":
     k = args.cutoff
 
     lines = get_lines_from_file(fileName,kyrgyzLetters,startTime)
-    tokens = [token for line in lines for token in line]
-    
+    tokens = [token for line in lines.split('\n') for token in line.split(' ')]
+
     # make the cutOff
     cutOffWords = get_cutOff_words(tokens,k,startTime)
     lines = replace_cutoff_with_UNK(lines, cutOffWords,startTime)
 
-    # # get lists of tuples of ngrams
-    unigrams=[]
-    bigrams=[]
-    for line in lines:
-        unigrams+=get_ngrams_from_line(line,1)
-        bigrams+=get_ngrams_from_line(line,2)
-    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-          ' A total of ' +str(len(unigrams))+
-          ' unigrams found')
-    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+ ' A total of '+
-          str(len(bigrams)) + ' bigrams found')
+    
+    # get lists of tuples of ngrams
+    unigrams, bigrams = get_ngram_tuples(lines,startTime)
 
     # get probability dictionaries
     uniProbDict, uniProbUnSeen = get_prob_dict(unigrams,1,smoothing,_lambda)
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' unigram probability dictionary made')
     biProbDict, biProbUnSeen = get_prob_dict(bigrams,2,smoothing,_lambda)
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-          ' probability dictionaries made')
+          ' bigram probability dictionary made')
 
     # get back-off weight dictionary
     if backoff:
         bowDict = get_bow_dict(uniProbDict,biProbDict)
         backedOff = 'true'
+        print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+              ' backoff model made')
     else:
         bowDict = None
         backedOff = 'false'
-    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-          ' done with backoff')
-    
+        print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+              ' backoff model NOT made')
+        
     with open('language_model_' + smoothing +'_backoff-'+ backedOff +'.txt',
               'w', encoding = 'utf-8') as outFile:
         
