@@ -7,7 +7,7 @@ in the form of a text file.
 INPUT: path to corpus text file
 OUTPUT: output.txt
 
-USAGE: $ python3 q1a.py path/to/corpus.txt
+USAGE: $ python3 freq_info_from_corpus.py path/to/corpus.txt
 '''
 
 import sys
