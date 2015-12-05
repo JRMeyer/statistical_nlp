@@ -12,7 +12,7 @@ from collections import Counter
 import numpy as np
 import re
 import time
-
+import sys
 
 def parse_user_args():
     parser = argparse.ArgumentParser()
@@ -98,6 +98,8 @@ def replace_cutoff_with_UNK(lines, cutOffWords, startTime):
           ' Cutoff Words replaced with <UNK> ')
     return lines
 
+
+
 def get_ngram_tuples(lines,startTime):
     unigrams=[]
     bigrams=[]
@@ -130,7 +132,7 @@ def get_ngrams_from_line(tokens, n):
     return ngrams
 
 
-def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda):
+def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda, startTime):
     '''
     Make a dictionary of probabilities, where the key is the ngram.
     Without smoothing, we have: p(X) = freq(X)/NUMBER_OF_NGRAMS
@@ -191,6 +193,9 @@ def get_prob_dict(ngrams, ngramOrder, smoothing, _lambda):
         for key, value in Counter(ngrams).items():
             probDict[key] = ((value + numSmooth) / denominator)
 
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t] '+
+          str(ngramOrder) + '-gram probability dictionary made')
+    
     return probDict, probUnSeen
 
 
@@ -218,7 +223,7 @@ def get_conditional_model(uniProbDict,biProbDict):
     return biCondDict
 
 
-def get_bow_dict(uniProbDict,biProbDict):
+def get_bow_dict(uniProbDict,biProbDict,startTime):
     # calculate backoff weights as in Katz 1987
     bowDict={}
     for uniKey,uniValue in uniProbDict.items():
@@ -230,6 +235,9 @@ def get_bow_dict(uniProbDict,biProbDict):
                 denominator+=uniProbDict[(biKey[1],)]
         alpha = (1-numerator)/(1-denominator)
         bowDict[uniKey] = alpha*uniValue
+
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+          ' backoff model made')
     return bowDict
 
         
@@ -242,9 +250,6 @@ kyrgyzLetters = ['а','о','у','ы','и','е','э',
 
 
 if __name__ == "__main__":
-    startTime = time.time()
-    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+ ' running')
-
     # get user input
     args = parse_user_args()
     fileName = args.infile
@@ -252,37 +257,38 @@ if __name__ == "__main__":
     _lambda = args.weight
     backoff = args.backoff
     k = args.cutoff
+    
+    startTime = time.time()
+    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+ ' running')
 
+    # tokenize file
     lines = get_lines_from_file(fileName,kyrgyzLetters,startTime)
     tokens = [token for line in lines.split('\n') for token in line.split(' ')]
-
+    
     # make the cutOff
     cutOffWords = get_cutOff_words(tokens,k,startTime)
     lines = replace_cutoff_with_UNK(lines, cutOffWords,startTime)
 
+    with open('clean_lines.txt', 'w', encoding = 'utf-8') as outlines:
+        outlines.write(lines)
+
+    sys.exit()
     
     # get lists of tuples of ngrams
     unigrams, bigrams = get_ngram_tuples(lines,startTime)
 
     # get probability dictionaries
-    uniProbDict, uniProbUnSeen = get_prob_dict(unigrams,1,smoothing,_lambda)
-    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-          ' unigram probability dictionary made')
-    biProbDict, biProbUnSeen = get_prob_dict(bigrams,2,smoothing,_lambda)
-    print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-          ' bigram probability dictionary made')
-
+    uniProbDict, uniProbUnSeen = get_prob_dict(unigrams,1,smoothing,_lambda,
+                                               startTime)
+    biProbDict, biProbUnSeen = get_prob_dict(bigrams,2,smoothing,_lambda,
+                                             startTime)
     # get back-off weight dictionary
     if backoff:
-        bowDict = get_bow_dict(uniProbDict,biProbDict)
+        bowDict = get_bow_dict(uniProbDict,biProbDict,startTime)
         backedOff = 'true'
-        print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-              ' backoff model made')
     else:
         bowDict = None
         backedOff = 'false'
-        print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-              ' backoff model NOT made')
         
     with open('language_model_' + smoothing +'_backoff-'+ backedOff +'.txt',
               'w', encoding = 'utf-8') as outFile:
