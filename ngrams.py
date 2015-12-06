@@ -31,12 +31,13 @@ def parse_user_args():
 
 
 def get_lines_from_file(fileName,kyrgyzLetters,startTime):
+    regex = re.compile(r'[.!?\n]')
     with open(fileName) as inFile:
         lines=''
         content = inFile.read()
-        for line in content.split('.'):
+        for line in re.split(regex,content):
             line = tokenize_line(line,kyrgyzLetters)
-            lines+=line
+            lines += line
     inFile.close()
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
           ' File read and tokenized')
@@ -264,16 +265,20 @@ if __name__ == "__main__":
     # tokenize file
     lines = get_lines_from_file(fileName,kyrgyzLetters,startTime)
     tokens = [token for line in lines.split('\n') for token in line.split(' ')]
-    
-    # make the cutOff
-    cutOffWords = get_cutOff_words(tokens,k,startTime)
-    lines = replace_cutoff_with_UNK(lines, cutOffWords,startTime)
+
 
     with open('clean_lines.txt', 'w', encoding = 'utf-8') as outlines:
         outlines.write(lines)
+        
+    # make the cutOff
+    cutOffWords = get_cutOff_words(tokens,k,startTime)
+    lines = replace_cutoff_with_UNK(lines,cutOffWords,startTime)
+
+    with open('clean_lines_UNK.txt', 'w', encoding = 'utf-8') as outlines:
+        outlines.write(lines)
 
     sys.exit()
-    
+
     # get lists of tuples of ngrams
     unigrams, bigrams = get_ngram_tuples(lines,startTime)
 
