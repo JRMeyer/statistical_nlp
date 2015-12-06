@@ -29,7 +29,6 @@ def parse_user_args():
     args = parser.parse_args()
     return args
 
-
 def get_lines_from_file(fileName,kyrgyzLetters,startTime):
     regex = re.compile(r'[.!?\n]')
     with open(fileName) as inFile:
