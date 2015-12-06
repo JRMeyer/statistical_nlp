@@ -264,11 +264,15 @@ if __name__ == "__main__":
     # tokenize file
     lines = get_lines_from_file(fileName,kyrgyzLetters,startTime)
     tokens = [token for line in lines.split('\n') for token in line.split(' ')]
+<<<<<<< HEAD
 
 
     with open('clean_lines.txt', 'w', encoding = 'utf-8') as outlines:
         outlines.write(lines)
         
+=======
+    
+>>>>>>> 18ab98447230699ec3f208631d4968a97dd2766e
     # make the cutOff
     cutOffWords = get_cutOff_words(tokens,k,startTime)
     lines = replace_cutoff_with_UNK(lines,cutOffWords,startTime)
@@ -278,6 +282,14 @@ if __name__ == "__main__":
 
     sys.exit()
 
+<<<<<<< HEAD
+=======
+    with open('clean_lines.txt', 'w', encoding = 'utf-8') as outlines:
+        outlines.write(lines)
+
+    sys.exit()
+    
+>>>>>>> 18ab98447230699ec3f208631d4968a97dd2766e
     # get lists of tuples of ngrams
     unigrams, bigrams = get_ngram_tuples(lines,startTime)
 
