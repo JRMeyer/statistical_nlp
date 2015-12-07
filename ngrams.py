@@ -261,18 +261,22 @@ if __name__ == "__main__":
     startTime = time.time()
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+ ' running')
 
-    # tokenize file
-    lines = get_lines_from_file(fileName,kyrgyzLetters,startTime)
-    tokens = [token for line in lines.split('\n') for token in line.split(' ')]
-    
-    # make the cutOff
-    cutOffWords = get_cutOff_words(tokens,k,startTime)
-    lines = replace_cutoff_with_UNK(lines,cutOffWords,startTime)
+    # # tokenize file
+    # lines = get_lines_from_file(fileName,kyrgyzLetters,startTime)
+    # tokens = [token for line in lines.split('\n') for token in line.split(' ')]
 
-    with open('clean_lines_UNK.txt', 'w', encoding = 'utf-8') as outlines:
-        outlines.write(lines)
+    # with open('clean_lines.txt', 'w', encoding = 'utf-8') as outlines:
+    #     outlines.write(lines)
+        
+    # # make the cutOff
+    # cutOffWords = get_cutOff_words(tokens,k,startTime)
+    # lines = replace_cutoff_with_UNK(lines,cutOffWords,startTime)
 
-    sys.exit()
+    # with open('clean_lines_UNK.txt', 'w', encoding = 'utf-8') as outlines:
+    #     outlines.write(lines)
+
+    with open(fileName) as f:
+        lines = f.read()
     
     # get lists of tuples of ngrams
     unigrams, bigrams = get_ngram_tuples(lines,startTime)
@@ -304,10 +308,10 @@ if __name__ == "__main__":
         
         for key,value in sortedUni:
             if backoff:
-                entry = (str(np.log(value)) +' '+ key[0] +' '+
+                entry = (str(np.log(value)) +'\t'+ key[0] +'\t'+
                          str(np.log(bowDict[key])))
             else:
-                entry = (str(np.log(value)) +' '+ key[0])
+                entry = (str(np.log(value)) +'\t'+ key[0])
             outFile.write(entry+'\n')
 
         ## print bigrams
@@ -316,7 +320,7 @@ if __name__ == "__main__":
                            reverse=True)
         
         for key,value in sortedBi:
-            entry = (str(np.log(value)) +' '+ key[0] +' '+ key[1])
+            entry = (str(np.log(value)) +'\t'+ key[0] +' '+ key[1])
             outFile.write(entry+'\n')
 
         outFile.write('\n\end\\')
