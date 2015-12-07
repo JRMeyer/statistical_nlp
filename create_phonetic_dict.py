@@ -12,7 +12,7 @@ def save_pronunciation_dict(tokens, lookupTable, lang):
         #
         
         if lang == 'kyrgyz':
-            # plosives followed by front/back vowels
+            # syllable onset plosives followed by front/back vowels
             phonemes = re.sub(r'к([аоуы])', r'kh \1', phonemes)
             phonemes = re.sub(r'к([иеэөү])', r'k \1', phonemes)
             phonemes = re.sub(r'г([аоуы])', r'gh \1', phonemes)
