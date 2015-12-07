@@ -275,6 +275,7 @@ if __name__ == "__main__":
     # with open('clean_lines_UNK.txt', 'w', encoding = 'utf-8') as outlines:
     #     outlines.write(lines)
 
+    ## if we want to feed in a cleaned file with <UNK>
     with open(fileName) as f:
         lines = f.read()
     
@@ -323,7 +324,7 @@ if __name__ == "__main__":
             entry = (str(np.log(value)) +'\t'+ key[0] +' '+ key[1])
             outFile.write(entry+'\n')
 
-        outFile.write('\n\end\\')
+        outFile.write('\n\end\\\n')
 
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
           ' successfully printed model to file!')
