@@ -140,7 +140,13 @@ kazakh_table = {'б' : 'b ',
         
 if __name__ == '__main__':
     fileName = input('enter file path here: ')
+    lang = input('enter language here: ')
     f = open(fileName)
+
+    if lang == 'kyrgyz':
+        lookupTable=kyrgyz_table
+    elif lang == 'kazakh':
+        lookupTable=kazakh_table
 
     # regex pattern to match everything that isn't a letter
     pattern = re.compile('[\W_0-9]+', re.UNICODE)
@@ -150,4 +156,5 @@ if __name__ == '__main__':
         for token in tokenize_line(line, n=1, tags=False):
             token = pattern.sub('', token)
             tokens.append(token)
-    save_pronunciation_dict(tokens, lookupTable=kazakh_table, lang='kazakh')
+            
+    save_pronunciation_dict(tokens, lookupTable=lookupTable, lang=lang)
