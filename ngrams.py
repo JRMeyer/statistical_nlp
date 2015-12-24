@@ -87,12 +87,9 @@ def get_cutOff_words(tokens,k,startTime):
 
 
 def replace_cutoff_with_UNK(lines, cutOffWords, startTime):
-    cutOffDict={}
+    # string.replace() is twice as fast as re.sub()!
     for key in cutOffWords:
-        cutOffDict[' '+key+' ']=' <UNK> '
-    
-    for key,value in cutOffDict.items():
-        lines = re.sub(key,value,lines)
+        lines = lines.replace(' '+key+' ',' <UNK> ')
             
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
           ' Cutoff Words replaced with <UNK> ')
@@ -230,27 +227,30 @@ def get_bow_dict(uniProbDict,biProbDict,triProbDict,startTime):
     # calculate backoff weights as in Katz 1987
     bowDict={}
     for uniKey,uniValue in uniProbDict.items():
-        numerator=0
-        denominator=0
+        numerator = 0
+        denominator = 0
         for biKey,biValue in biProbDict.items():
             if biKey[0] == uniKey[0]:
-                numerator+=biValue
-                denominator+=uniProbDict[(biKey[1],)]
-        alpha = (1-numerator)/(1-denominator)
+                numerator += biValue
+                denominator += uniValue
+        alpha = (1-numerator/1-denominator)
         bowDict[uniKey] = alpha*uniValue
-
-    for biKey,biValue in biProbDict.items():
-        numerator=0
-        denominator=0
-        for triKey,triValue in triProbDict.items():
-            if triKey[0:2] == biKey[:]:
-                numerator+=triValue
-                denominator+=uniProbDict[(triKey[2],)]
-        alpha = (1-numerator)/(1-denominator)
-        bowDict[biKey] = alpha*biValue
         
     print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
-          ' backoff model made')
+          ' 2-gram backoff model made')
+    
+    # for biKey,biValue in biProbDict.items():
+    #     numerator=0
+    #     denominator=0
+    #     for triKey,triValue in triProbDict.items():
+    #         if triKey[0:2] == biKey[:]:
+    #             numerator += triValue
+    #             denominator += biValue
+    #     alpha = 1-(numerator/denominator)
+    #     bowDict[biKey] = alpha*biValue
+        
+    # print('[  '+ str("%.2f" % (time.time()-startTime)) +'  \t]'+
+    #       ' 3-gram backoff model made')
     return bowDict
 
         
