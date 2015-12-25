@@ -3,7 +3,7 @@ Joshua Meyer
 
 Given a corpus (text file), output a model of n-grams
 
-USAGE: $ python3 nGrams.py
+USAGE: $ python3 ngrams.py
 '''
 
 import argparse
