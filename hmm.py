@@ -3,7 +3,7 @@ Joshua Meyer
 
 Simulating a Hidden Markov Model
 
-USAGE: $ python q2.py
+USAGE: $ python3 hmm.py
 '''
 import numpy as np
 import random
@@ -11,32 +11,23 @@ import random
 class HMM:
     def __init__(self):
         # look-up tables for emissions and states
-        self.S = ['tag1','tag2','tag3', 'tag4', 'tag5']
-        self.K = ['w1','w2','w3', 'w4']
+        self.S = ['state1','state2']
+        self.K = ['a', 'b']
         
         # array of initial state probabilities
-        self.PI = np.matrix([0.15,
-                             0.25,
-                             0.20,
-                             0.25,
-                             0.15],
+        self.PI = np.matrix([1.0,
+                             0.0],
                             dtype=float)
 
         # matrix of state transition probabilities
-        self.A = np.matrix([[0.20, 0.20, 0.20, 0.20, 0.20],
-                            [0.10, 0.15, 0.50, 0.15, 0.10],
-                            [0.30, 0.10, 0.30, 0.10, 0.20],
-                            [0.40, 0.05, 0.10, 0.40, 0.05],
-                            [0.20, 0.30, 0.10, 0.10, 0.30]],
+        self.A = np.matrix([[0.5, 0.5],
+                            [0.7, 0.3]],
                            dtype=float)
 
 
         # matrix of emission probabilities
-        self.B = np.matrix([[0.25, 0.25, 0.25, 0.25],
-                            [0.30, 0.20, 0.30, 0.20],
-                            [0.30, 0.10, 0.30, 0.30],
-                            [0.10, 0.20, 0.30, 0.40],
-                            [0.20, 0.30, 0.20, 0.30]],
+        self.B = np.matrix([[0.4, 0.6],
+                            [0.1, 0.9]],
                            dtype=float)
 
         
@@ -75,6 +66,9 @@ class HMM:
     def compute_max_likelihood(self, O):
         Trellis = self.forward_algorithm(O)
         MLE = np.sum(Trellis, axis=0)[0,-1]
+        print('FORWARD ALGORITHM TRELLIS:')
+        print(Trellis)
+        print('MAXIMUM LIKELIHOOD ESTIMATION:')
         print(O, str(MLE))
         
     def get_best_path(self,Trellis):
@@ -149,8 +143,10 @@ def generate_string(hmm):
             
 if __name__ == "__main__":
     hmm = HMM()
-    with open(input('Enter filename here: ')) as f:
-        lines = f.readlines()
-    for line in lines:        
-        O = line.rstrip().split(' ')
-        hmm.compute_max_likelihood(O)
+    print('STATES:')
+    print(hmm.S)
+    print('ALPHABET:')
+    print(hmm.K)
+    o = input('Enter observation here with spaces: ')
+    o = o.split(' ')
+    hmm.compute_max_likelihood(o)
