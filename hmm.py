@@ -76,10 +76,11 @@ class HMM:
                 # \alpha_{t}(j) = \sum^{N}_{i=1} \big[ \alpha_{t-1}(i) \cdot a_{ij} \cdot b_j(o_t) \big]
                 for state_j in range(len(self.S)):
                     combinedProb_j = 0
+                    emissionProb_j = self.B[state_j,emissionIndex]
+
                     for state_i in range(len(self.S)):
                         previousProb_i = Trellis[state_i,(emission_num-1)]
                         transProb_ij = self.A[state_i,state_j]
-                        emissionProb_j = self.B[state_j,emissionIndex]
                         combinedProb_j += previousProb_i*transProb_ij*emissionProb_j
 
                     Trellis[state_j,emission_num] = combinedProb_j
@@ -134,10 +135,10 @@ class HMM:
                 for state_j in range(len(self.S)):
                     bestProb_j = 0
                     currentProb_j = 0
+                    emissionProb_j = self.B[state_j,emissionIndex]
                     for state_i in range(len(self.S)):
                         previousProb_i = Trellis[state_i,(emission_num-1)]
                         transProb_ij = self.A[state_i,state_j]
-                        emissionProb_j = self.B[state_j,emissionIndex]
                         currentProb_j = previousProb_i*transProb_ij*emissionProb_j
                         if bestProb_j < currentProb_j:
                             bestProb_j = currentProb_j
