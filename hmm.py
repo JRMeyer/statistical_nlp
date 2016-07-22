@@ -73,7 +73,7 @@ class HMM:
 
             # RECURSION
             elif emission_num != 0:
-                # \alpha_{t}(j) = \sum^{N}_{i=1} \big[ \alpha_{t-1}(i) \cdot a_{ij} \cdot b_j(o_t) \big]
+                # \alpha_{t}(j) =  b_j(o_t) \cdot \sum^{N}_{i=1} \big[ \alpha_{t-1}(i) \cdot a_{ij} \big]
                 for state_j in range(len(self.S)):
                     combinedProb_j = 0
                     emissionProb_j = self.B[state_j,emissionIndex]
